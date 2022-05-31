@@ -47,7 +47,7 @@ public class WriterController {
             return;
         }
 
-        writerService.save(firstName, lastName);
+        writerService.saveNewWriter(firstName, lastName);
     }
 
     public void update() throws IOException {

@@ -2,20 +2,17 @@ package org.crud.repository.impl;
 
 import org.crud.model.Label;
 import org.crud.repository.LabelRepository;
+import org.crud.utils.JdbcUtils;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class MysqlLabelRepositoryImpl extends MysqlGenericRepository implements LabelRepository {
+public class JdbcLabelRepositoryImpl implements LabelRepository {
     @Override
     public Label getById(Long id) {
-        try(Connection connection = getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM label WHERE id = ?")) {
-
-            Class.forName(JDBC_DRIVER);
-
+        try(PreparedStatement preparedStatement = JdbcUtils.getPreparedStatement("SELECT * FROM label WHERE id = ?")) {
             preparedStatement.setLong(1, id);
             ResultSet resultSet = preparedStatement.executeQuery();
 
@@ -26,7 +23,7 @@ public class MysqlLabelRepositoryImpl extends MysqlGenericRepository implements 
                 return label;
             }
 
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("Error: Label(id: " + id + ") has not found");
         }
 
@@ -35,12 +32,8 @@ public class MysqlLabelRepositoryImpl extends MysqlGenericRepository implements 
 
     @Override
     public List<Label> getAll() {
-        try(Connection connection = getConnection();
-            Statement statement = connection.createStatement()) {
-
-            Class.forName(JDBC_DRIVER);
-
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM label");
+        try(PreparedStatement preparedStatement= JdbcUtils.getPreparedStatement("SELECT * FROM label")) {
+            ResultSet resultSet = preparedStatement.executeQuery();
 
             List<Label> labels = new ArrayList<>();
             while (resultSet.next()) {
@@ -52,7 +45,7 @@ public class MysqlLabelRepositoryImpl extends MysqlGenericRepository implements 
 
             return labels;
 
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("Error: Can't get labels");
         }
 
@@ -61,17 +54,14 @@ public class MysqlLabelRepositoryImpl extends MysqlGenericRepository implements 
 
     @Override
     public Label save(Label label) {
-        try(Connection connection = getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO label(name) VALUES(?)")) {
-
-            Class.forName(JDBC_DRIVER);
+        try(PreparedStatement preparedStatement = JdbcUtils.getPreparedStatement("INSERT INTO label(name) VALUES(?)")) {
 
             preparedStatement.setString(1, label.getName());
             preparedStatement.executeUpdate();
 
             return label;
 
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("Error: new label has not saved");
         }
 
@@ -80,10 +70,7 @@ public class MysqlLabelRepositoryImpl extends MysqlGenericRepository implements 
 
     @Override
     public Label update(Label label) {
-        try(Connection connection = getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement("UPDATE label SET name = ? WHERE id = ?")) {
-
-            Class.forName(JDBC_DRIVER);
+        try(PreparedStatement preparedStatement = JdbcUtils.getPreparedStatement("UPDATE label SET name = ? WHERE id = ?")) {
 
             preparedStatement.setString(1, label.getName());
             preparedStatement.setLong(2, label.getId());
@@ -91,7 +78,7 @@ public class MysqlLabelRepositoryImpl extends MysqlGenericRepository implements 
 
             return label;
 
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("Error: new label has not updated");
         }
 
@@ -100,29 +87,22 @@ public class MysqlLabelRepositoryImpl extends MysqlGenericRepository implements 
 
     @Override
     public void deleteById(Long id) {
-        try(Connection connection = getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM label WHERE id = ?")) {
-
-            Class.forName(JDBC_DRIVER);
-
+        try(PreparedStatement preparedStatement = JdbcUtils.getPreparedStatement("DELETE FROM label WHERE id = ?")) {
             preparedStatement.setLong(1, id);
             preparedStatement.executeUpdate();
 
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("Error: new label has not updated");
         }
     }
 
     @Override
     public List<Label> getByPostId(Long postId) {
-        try(Connection connection = getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement(
+        try(PreparedStatement preparedStatement = JdbcUtils.getPreparedStatement(
                     "SELECT l.id, l.name " +
                             "FROM label l " +
                             "INNER JOIN post_label pl ON pl.labelId = l.id " +
                             "WHERE pl.postId = ?")) {
-
-            Class.forName(JDBC_DRIVER);
 
             preparedStatement.setLong(1, postId);
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -137,7 +117,7 @@ public class MysqlLabelRepositoryImpl extends MysqlGenericRepository implements 
 
             return labels;
 
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("Error: Can't get labels for post(id:" + postId);
         }
 
@@ -146,15 +126,11 @@ public class MysqlLabelRepositoryImpl extends MysqlGenericRepository implements 
 
     @Override
     public List<Label> getByIds(List<Long> ids) {
-        try(Connection connection = getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement(
+        try(PreparedStatement preparedStatement = JdbcUtils.getPreparedStatement(
                     "SELECT * FROM label WHERE id IN (" + ids.stream().map(String::valueOf)
                             .collect(Collectors.joining(",")) + ")")) {
 
-            Class.forName(JDBC_DRIVER);
-
             System.out.println(preparedStatement);
-
             ResultSet resultSet = preparedStatement.executeQuery();
 
             List<Label> labels = new ArrayList<>();
@@ -168,7 +144,7 @@ public class MysqlLabelRepositoryImpl extends MysqlGenericRepository implements 
 
             return labels;
 
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("Error: Label has not found");
         }
 

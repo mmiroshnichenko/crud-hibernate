@@ -4,26 +4,38 @@ import org.crud.model.Post;
 import org.crud.model.Writer;
 import org.crud.repository.PostRepository;
 import org.crud.repository.WriterRepository;
-import org.crud.repository.impl.MysqlPostRepositoryImpl;
-import org.crud.repository.impl.MysqlWriterRepositoryImpl;
+import org.crud.repository.impl.JdbcPostRepositoryImpl;
+import org.crud.repository.impl.JdbcWriterRepositoryImpl;
 
 import java.util.List;
 
 public class WriterService {
-    private final WriterRepository writerRepository = new MysqlWriterRepositoryImpl();
-    private final PostRepository postRepository = new MysqlPostRepositoryImpl();
+    private final WriterRepository writerRepository;
+    private final PostRepository postRepository;
+
+    public WriterService() {
+        this.writerRepository = new JdbcWriterRepositoryImpl();
+        this.postRepository = new JdbcPostRepositoryImpl();
+    }
+
+    public WriterService(WriterRepository writerRepository, PostRepository postRepository) {
+        this.writerRepository = writerRepository;
+        this.postRepository = postRepository;
+    }
 
     public List<Writer> getList() {
         return writerRepository.getAll();
     }
 
-    public Writer save(String firstName, String lastName) {
+    public Writer saveNewWriter(String firstName, String lastName) {
         Writer writer = new Writer();
         writer.setFirstName(firstName);
         writer.setLastName(lastName);
-        writerRepository.save(writer);
+        return this.save(writer);
+    }
 
-        return writer;
+    public Writer save(Writer writer) {
+        return writerRepository.save(writer);
     }
 
     public Writer getById(Long id) {

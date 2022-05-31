@@ -1,5 +1,6 @@
 package org.crud.model;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -55,6 +56,7 @@ public class Writer {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
+        this.posts = new ArrayList<>();
     }
 
     @Override

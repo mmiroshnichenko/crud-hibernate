@@ -1,5 +1,3 @@
---liquibase formatted sql
-
 --changeset mmyroshnychenko:1 labels:label-table context:new-label-table
 CREATE TABLE IF NOT EXISTS `label` (
     `id` int(11) NOT NULL AUTO_INCREMENT,

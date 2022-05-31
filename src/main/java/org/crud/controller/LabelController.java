@@ -41,7 +41,7 @@ public class LabelController {
             return;
         }
 
-        labelService.save(name);
+        labelService.saveNewLabel(name);
     }
 
     public void update() throws IOException {

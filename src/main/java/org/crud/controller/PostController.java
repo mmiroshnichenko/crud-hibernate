@@ -93,7 +93,7 @@ public class PostController {
             return;
         }
 
-        postService.save(content, writer, labels);
+        postService.saveNewPost(content, writer, labels);
     }
 
     public void view() throws IOException {

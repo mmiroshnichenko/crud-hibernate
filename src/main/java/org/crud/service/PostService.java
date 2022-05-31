@@ -5,20 +5,28 @@ import org.crud.model.Post;
 import org.crud.model.PostStatus;
 import org.crud.model.Writer;
 import org.crud.repository.PostRepository;
-import org.crud.repository.impl.MysqlPostRepositoryImpl;
+import org.crud.repository.impl.JdbcPostRepositoryImpl;
 
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
 public class PostService {
-    private final PostRepository postRepository = new MysqlPostRepositoryImpl();
+    private final PostRepository postRepository;
+
+    public PostService() {
+        this.postRepository = new JdbcPostRepositoryImpl();
+    }
+
+    public PostService(PostRepository postRepository) {
+        this.postRepository = postRepository;
+    }
 
     public List<Post> getList() {
         return postRepository.getAll();
     }
 
-    public Post save(String content, Writer writer, List<Label> labels) {
+    public Post saveNewPost(String content, Writer writer, List<Label> labels) {
         Post post = new Post();
         post.setWriter(writer);
         post.setContent(content);
@@ -26,9 +34,11 @@ public class PostService {
         post.setStatus(PostStatus.UNDER_REVIEW);
         post.setCreated(new Date());
         post.setUpdated(new Date());
-        postRepository.save(post);
+        return this.save(post);
+    }
 
-        return post;
+    public Post save(Post post) {
+        return postRepository.save(post);
     }
 
     public Post getById(Long id) {

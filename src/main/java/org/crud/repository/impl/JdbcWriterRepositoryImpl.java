@@ -1,20 +1,17 @@
 package org.crud.repository.impl;
 
-import org.crud.model.Label;
 import org.crud.model.Writer;
 import org.crud.repository.WriterRepository;
+import org.crud.utils.JdbcUtils;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MysqlWriterRepositoryImpl extends MysqlGenericRepository implements WriterRepository {
+public class JdbcWriterRepositoryImpl implements WriterRepository {
     @Override
     public Writer getById(Long id) {
-        try(Connection connection = getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM writer WHERE id = ?")) {
-
-            Class.forName(JDBC_DRIVER);
+        try(PreparedStatement preparedStatement = JdbcUtils.getPreparedStatement("SELECT * FROM writer WHERE id = ?")) {
 
             preparedStatement.setLong(1, id);
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -27,7 +24,7 @@ public class MysqlWriterRepositoryImpl extends MysqlGenericRepository implements
                 return writer;
             }
 
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("Error: Writer(id: " + id + ") has not found");
         }
 
@@ -36,12 +33,9 @@ public class MysqlWriterRepositoryImpl extends MysqlGenericRepository implements
 
     @Override
     public List<Writer> getAll() {
-        try(Connection connection = getConnection();
-            Statement statement = connection.createStatement()) {
+        try(PreparedStatement preparedStatement = JdbcUtils.getPreparedStatement("SELECT * FROM writer")) {
 
-            Class.forName(JDBC_DRIVER);
-
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM writer");
+            ResultSet resultSet = preparedStatement.executeQuery();
 
             List<Writer> writers = new ArrayList<>();
             while (resultSet.next()) {
@@ -54,7 +48,7 @@ public class MysqlWriterRepositoryImpl extends MysqlGenericRepository implements
 
             return writers;
 
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("Error: Can't get writers");
         }
 
@@ -63,10 +57,7 @@ public class MysqlWriterRepositoryImpl extends MysqlGenericRepository implements
 
     @Override
     public Writer save(Writer writer) {
-        try(Connection connection = getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO writer(firstName, lastName) VALUES(?, ?)")) {
-
-            Class.forName(JDBC_DRIVER);
+        try(PreparedStatement preparedStatement = JdbcUtils.getPreparedStatement("INSERT INTO writer(firstName, lastName) VALUES(?, ?)")) {
 
             preparedStatement.setString(1, writer.getFirstName());
             preparedStatement.setString(2, writer.getLastName());
@@ -74,7 +65,7 @@ public class MysqlWriterRepositoryImpl extends MysqlGenericRepository implements
 
             return writer;
 
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("Error: new writer has not saved");
         }
 
@@ -83,10 +74,7 @@ public class MysqlWriterRepositoryImpl extends MysqlGenericRepository implements
 
     @Override
     public Writer update(Writer writer) {
-        try(Connection connection = getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement("UPDATE writer SET firstName = ?, lastName = ? WHERE id = ?")) {
-
-            Class.forName(JDBC_DRIVER);
+        try(PreparedStatement preparedStatement = JdbcUtils.getPreparedStatement("UPDATE writer SET firstName = ?, lastName = ? WHERE id = ?")) {
 
             preparedStatement.setString(1, writer.getFirstName());
             preparedStatement.setString(2, writer.getLastName());
@@ -95,7 +83,7 @@ public class MysqlWriterRepositoryImpl extends MysqlGenericRepository implements
 
             return writer;
 
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("Error: writer(id: " + writer.getId() + ") has not updated");
         }
 
@@ -104,15 +92,12 @@ public class MysqlWriterRepositoryImpl extends MysqlGenericRepository implements
 
     @Override
     public void deleteById(Long id) {
-        try(Connection connection = getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM writer WHERE id = ?")) {
-
-            Class.forName(JDBC_DRIVER);
+        try(PreparedStatement preparedStatement = JdbcUtils.getPreparedStatement("DELETE FROM writer WHERE id = ?")) {
 
             preparedStatement.setLong(1, id);
             preparedStatement.executeUpdate();
 
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("Error: writer (id: " + id + ")has not deleted");
         }
     }

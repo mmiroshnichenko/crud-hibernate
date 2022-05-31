@@ -2,13 +2,20 @@ package org.crud.service;
 
 import org.crud.model.Label;
 import org.crud.repository.LabelRepository;
-import org.crud.repository.impl.MysqlLabelRepositoryImpl;
+import org.crud.repository.impl.JdbcLabelRepositoryImpl;
 
-import java.io.IOException;
 import java.util.List;
 
 public class LabelService {
-    private final LabelRepository labelRepository = new MysqlLabelRepositoryImpl();
+    private final LabelRepository labelRepository;
+
+    public LabelService() {
+        this.labelRepository = new JdbcLabelRepositoryImpl();
+    }
+
+    public LabelService(LabelRepository labelRepository) {
+        this.labelRepository = labelRepository;
+    }
 
     public List<Label> getList() {
         return labelRepository.getAll();
@@ -18,12 +25,14 @@ public class LabelService {
         return labelRepository.getByIds(ids);
     }
 
-    public Label save(String name) {
+    public Label saveNewLabel(String name) {
         Label label = new Label();
         label.setName(name);
-        labelRepository.save(label);
+        return this.save(label);
+    }
 
-        return label;
+    public Label save(Label label) {
+        return labelRepository.save(label);
     }
 
     public Label getById(Long id)  {

@@ -6,23 +6,21 @@ import org.crud.model.PostStatus;
 import org.crud.model.Writer;
 import org.crud.repository.LabelRepository;
 import org.crud.repository.PostRepository;
+import org.crud.utils.JdbcUtils;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MysqlPostRepositoryImpl extends MysqlGenericRepository implements PostRepository {
-    private LabelRepository labelRepository = new MysqlLabelRepositoryImpl();
+public class JdbcPostRepositoryImpl implements PostRepository {
+    private LabelRepository labelRepository = new JdbcLabelRepositoryImpl();
 
     @Override
     public Post getById(Long id) {
-        try(Connection connection = getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement(
+        try(PreparedStatement preparedStatement = JdbcUtils.getPreparedStatement(
                     "SELECT p.id, p.writerId, w.firstName, w.lastName, p.content, p.created, p.updated, p.status FROM post p " +
                             "INNER JOIN writer w ON p.writerId = w.id " +
                             "WHERE p.id = ?")) {
-
-            Class.forName(JDBC_DRIVER);
 
             preparedStatement.setLong(1, id);
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -46,7 +44,7 @@ public class MysqlPostRepositoryImpl extends MysqlGenericRepository implements P
                 return post;
             }
 
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("Error: post(id: " + id + ") has not found");
         }
 
@@ -55,12 +53,10 @@ public class MysqlPostRepositoryImpl extends MysqlGenericRepository implements P
 
     @Override
     public List<Post> getAll() {
-        try(Connection connection = getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement(
+        try(PreparedStatement preparedStatement = JdbcUtils.getPreparedStatement(
                     "SELECT p.id, p.writerId, w.firstName, w.lastName, p.content, p.created, p.updated, p.status FROM post p " +
                             "INNER JOIN writer w ON p.writerId = w.id ")) {
 
-            Class.forName(JDBC_DRIVER);
             ResultSet resultSet = preparedStatement.executeQuery();
             List<Post> posts = new ArrayList<>();
 
@@ -81,7 +77,7 @@ public class MysqlPostRepositoryImpl extends MysqlGenericRepository implements P
             }
             return posts;
 
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("Error: Can't get posts");
         }
 
@@ -90,12 +86,8 @@ public class MysqlPostRepositoryImpl extends MysqlGenericRepository implements P
 
     @Override
     public Post save(Post post) {
-        try(Connection connection = getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement(
-                "INSERT INTO post(writerId, content, created, updated, status) VALUES(?, ?, ?, ?, ?)",
-                    Statement.RETURN_GENERATED_KEYS)) {
-
-            Class.forName(JDBC_DRIVER);
+        try(PreparedStatement preparedStatement = JdbcUtils.getPreparedStatementWithGeneratedKeys(
+                "INSERT INTO post(writerId, content, created, updated, status) VALUES(?, ?, ?, ?, ?)")) {
 
             preparedStatement.setLong(1, post.getWriter().getId());
             preparedStatement.setString(2, post.getContent());
@@ -118,7 +110,7 @@ public class MysqlPostRepositoryImpl extends MysqlGenericRepository implements P
             }
             return post;
 
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("Error: new post has not saved");
         }
 
@@ -126,44 +118,35 @@ public class MysqlPostRepositoryImpl extends MysqlGenericRepository implements P
     }
 
     private void savePostLabel(Post post, Label label) {
-        try(Connection connection = getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement(
+        try(PreparedStatement preparedStatement = JdbcUtils.getPreparedStatement(
                     "INSERT INTO post_label(postId, labelId) VALUES(?, ?)")) {
-
-            Class.forName(JDBC_DRIVER);
 
             preparedStatement.setLong(1, post.getId());
             preparedStatement.setLong(2, label.getId());
             preparedStatement.executeUpdate();
 
 
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("Error: post label link has not saved");
         }
     }
 
     private void deletePostLabels(Post post) {
-        try(Connection connection = getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement(
+        try(PreparedStatement preparedStatement = JdbcUtils.getPreparedStatement(
                     "DELETE FROM post_label WHERE postId = ?")) {
-
-            Class.forName(JDBC_DRIVER);
 
             preparedStatement.setLong(1, post.getId());
             preparedStatement.executeUpdate();
 
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("Error: post label link (postId: " + post.getId() + ")has not deleted");
         }
     }
 
     @Override
     public Post update(Post post) {
-        try(Connection connection = getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement(
+        try(PreparedStatement preparedStatement = JdbcUtils.getPreparedStatement(
                     "UPDATE post SET writerId = ?, content = ?, updated = ?, status = ? WHERE id = ?")) {
-
-            Class.forName(JDBC_DRIVER);
 
             preparedStatement.setLong(1, post.getWriter().getId());
             preparedStatement.setString(2, post.getContent());
@@ -177,7 +160,7 @@ public class MysqlPostRepositoryImpl extends MysqlGenericRepository implements P
             }
             return post;
 
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("Error: post(id: " + post.getId() + ") has not updated");
         }
 
@@ -186,27 +169,21 @@ public class MysqlPostRepositoryImpl extends MysqlGenericRepository implements P
 
     @Override
     public void deleteById(Long id) {
-        try(Connection connection = getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM post WHERE id = ?")) {
-
-            Class.forName(JDBC_DRIVER);
+        try(PreparedStatement preparedStatement = JdbcUtils.getPreparedStatement("DELETE FROM post WHERE id = ?")) {
 
             preparedStatement.setLong(1, id);
             preparedStatement.executeUpdate();
 
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("Error: post (id: " + id + ")has not deleted");
         }
     }
 
     @Override
     public List<Post> getAllByWriter(Writer writer) {
-        try(Connection connection = getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement(
+        try(PreparedStatement preparedStatement = JdbcUtils.getPreparedStatement(
                     "SELECT id, content, created, updated, status FROM post  " +
                             " WHERE writerId = ?")) {
-
-            Class.forName(JDBC_DRIVER);
 
             preparedStatement.setLong(1, writer.getId());
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -225,7 +202,7 @@ public class MysqlPostRepositoryImpl extends MysqlGenericRepository implements P
             }
             return posts;
 
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("Error: Can't get posts");
         }
 

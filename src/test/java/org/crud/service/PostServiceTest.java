@@ -4,8 +4,8 @@ import org.crud.model.Label;
 import org.crud.model.Post;
 import org.crud.model.PostStatus;
 import org.crud.model.Writer;
+import org.crud.repository.PostRepository;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -16,7 +16,8 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 
 public class PostServiceTest {
-    private PostService mockPostService = Mockito.mock(PostService.class);
+    private PostRepository mockPostRepository = Mockito.mock(PostRepository.class);
+    private PostService postService = new PostService(mockPostRepository);
     private List<Label> labels;
     private Date date = new Date();
     private Writer writer;
@@ -34,46 +35,37 @@ public class PostServiceTest {
         writer.setLastName("Myroshnychenko");
     }
 
+    private Post getPost() {
+        return new Post(
+                1L,
+                writer,
+                "Test saved content",
+                date,
+                date,
+                labels,
+                PostStatus.UNDER_REVIEW
+        );
+    }
+
     @Test
     public void shouldSavePostTest() {
-        Post savedPost = new Post(
-                1L,
-                writer,
-                "Test saved content",
-                date,
-                date,
-                labels,
-                PostStatus.UNDER_REVIEW
-        );
 
-        Mockito.when(mockPostService.save("Test saved content", writer, labels)).thenReturn(
-            new Post(
-                1L,
-                writer,
-                "Test saved content",
-                date,
-                date,
-                labels,
-                PostStatus.UNDER_REVIEW
-            )
-        );
+        Post newPost = new Post();
+        newPost.setWriter(writer);
+        newPost.setContent("Test saved content");
+        newPost.setCreated(date);
+        newPost.setUpdated(date);
+        newPost.setLabels(labels);
+        newPost.setStatus(PostStatus.UNDER_REVIEW);
 
-        Post savedMockPost = mockPostService.save("Test saved content", writer, labels);
-        assertEquals(savedPost, savedMockPost);
+        Mockito.when(mockPostRepository.save(newPost)).thenReturn(getPost());
+
+        Post savedMockPost = postService.save(newPost);
+        assertEquals(getPost(), savedMockPost);
     }
 
     @Test
     public void shouldUpdatePostTest() {
-        Post post = new Post(
-                1L,
-                writer,
-                "Test saved content",
-                date,
-                date,
-                labels,
-                PostStatus.UNDER_REVIEW
-        );
-
         Post updatedPost = new Post(
                 1L,
                 writer,
@@ -84,19 +76,9 @@ public class PostServiceTest {
                 PostStatus.ACTIVE
         );
 
-        Mockito.when(mockPostService.updateStatus(post, PostStatus.ACTIVE)).thenReturn(
-            new Post(
-                1L,
-                writer,
-                "Test saved content",
-                date,
-                date,
-                labels,
-                PostStatus.ACTIVE
-            )
-        );
+        Mockito.when(mockPostRepository.update(updatedPost)).thenReturn(updatedPost);
 
-        Post updatedMockPost = mockPostService.updateStatus(post, PostStatus.ACTIVE);
+        Post updatedMockPost = postService.updateStatus(updatedPost, PostStatus.ACTIVE);
         assertEquals(updatedPost, updatedMockPost);
     }
 }
